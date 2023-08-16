@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: kuboard
+  name: kuboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kuboard
+  template:
+    metadata:
+      labels:
+        app: kuboard
+    spec:
+      volumes:
+      - name: kuboard-data
+        hostPath: 
+          path: /kuboard-data
+          type: "" 
+      containers:
+      - image: eipwork/kuboard:v3
+        name: kuboard
+        ports:
+        - containerPort: 80
+        env:
+        - name: KUBOARD_ENDPOINT
+          value: "http://12.12.1.132:30080" 
+        - name: KUBOARD_AGENT_SERVER_TCP_PORT
+          value: "10081"
+        volumeMounts:
+        - name: kuboard-data
+          mountPath: /data
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kuboard
+  name: kuboard-svc
+spec:
+  ports:
+  - name: http
+    nodePort: 30080
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: tcp-10081
+    port: 10081
+    protocol: TCP
+    targetPort: 10081
+  selector:
+    app: kuboard
+  type: NodePort
